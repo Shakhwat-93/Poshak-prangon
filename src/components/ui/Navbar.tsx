@@ -71,7 +71,7 @@ export default function Navbar() {
             {/* Right Action Pills */}
             <div className="pointer-events-auto flex items-center gap-3">
                 <a
-                    href="#combos"
+                    href="#checkout"
                     className="hidden lg:flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 bg-[#baf598] text-[#1E362D] hover:scale-105 shadow-[0_0_20px_rgba(186,245,152,0.3)]"
                 >
                     <ShoppingBag className="w-4 h-4" />
@@ -80,7 +80,7 @@ export default function Navbar() {
 
                 {/* Mobile Order Icon */}
                 <a
-                    href="#combos"
+                    href="#checkout"
                     className="lg:hidden flex items-center justify-center w-11 h-11 rounded-full bg-[#baf598] text-[#1E362D]"
                 >
                     <ShoppingBag className="w-5 h-5" />

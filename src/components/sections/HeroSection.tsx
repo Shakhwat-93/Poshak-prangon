@@ -68,10 +68,10 @@ export default function HeroSection() {
 
                             <div className="pt-8 pb-16 flex justify-center pointer-events-auto relative z-10">
                                 <a
-                                    href="#combos"
+                                    href="#checkout"
                                     className="group relative px-8 py-4 md:px-10 md:py-5 rounded-full bg-[#baf598] text-[#0A1610] font-bold text-base md:text-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_4px_20px_rgba(186,245,152,0.6)] overflow-hidden"
                                 >
-                                    <span className="relative z-10 block transition-transform duration-300 group-hover:-translate-y-0.5">কালেকশন দেখুন</span>
+                                    <span className="relative z-10 block transition-transform duration-300 group-hover:-translate-y-0.5">অর্ডার করুন</span>
                                     {/* Hover Sweep Effect */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] skew-x-12 z-0"></div>
                                 </a>

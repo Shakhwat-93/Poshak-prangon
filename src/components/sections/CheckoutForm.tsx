@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+const englishToBengali = (num: number | string) => {
+    const items: { [key: string]: string } = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯' };
+    return num.toString().replace(/[0-9]/g, (match) => items[match]);
+};
 
 // Add the same combos data for the checkout visual representation
 const combos = [
@@ -11,42 +17,113 @@ const combos = [
         id: "combo-1",
         title: "৩ পিস ৫.৫ হাত চিকন সুতার লুঙ্গি",
         shortTitle: "৩ পিস ৫.৫ হাত লুঙ্গি + ১ ফ্রি গামছা",
-        price: "১০৫০",
+        price: 1050,
         image: "/WhatsApp Image 2026-02-28 at 3.26.22 PM.jpeg",
     },
     {
         id: "combo-2",
         title: "৪ পিস ৫.৫ হাত চিকন সুতার লুঙ্গি",
         shortTitle: "৪ পিস ৫.৫ হাত লুঙ্গি + ১ ফ্রি গামছা",
-        price: "১৩৫০",
+        price: 1350,
         image: "/WhatsApp Image 2026-02-28 at 3.30.31 PM.jpeg",
         recommended: true,
     },
     {
         id: "combo-3",
-        title: "৪ পিস (এক্সট্রা প্রিমিয়াম) চিকন সুতার",
-        shortTitle: "৪ পিস (এক্সট্রা প্রিমিয়াম) + ১ ফ্রি গামছা",
-        price: "১৪৫০",
+        title: "৪ পিস (এক্সট্রা প্রিমিয়াম) ৬ হাত চিকন সুতার লুঙ্গি",
+        shortTitle: "৪ পিস (এক্সট্রা প্রিমিয়াম) ৬ হাত লুঙ্গি + ১ ফ্রি গামছা",
+        price: 1450,
         image: "/WhatsApp Image 2026-02-28 at 3.31.15 PM.jpeg",
     },
 ];
 
 export default function CheckoutForm() {
+    const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [success, setSuccess] = useState(false);
     // Pre-select the recommended combo (combo-2) by default
-    const [selectedComboId, setSelectedComboId] = useState("combo-2");
+    const [selectedComboIds, setSelectedComboIds] = useState<string[]>(["combo-2"]);
+
+    // Track initial checkout open
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const dataLayer = (window as any).dataLayer || [];
+            dataLayer.push({
+                event: "view_item_list",
+                ecommerce: {
+                    items: combos.map(c => ({
+                        item_name: c.shortTitle,
+                        price: c.price,
+                        item_category: "Combo Offers"
+                    }))
+                }
+            });
+        }
+    }, []);
+
+    const toggleCombo = (id: string) => {
+        setSelectedComboIds((prev) => {
+            const isRemoving = prev.includes(id);
+            const combo = combos.find(c => c.id === id);
+
+            if (typeof window !== "undefined" && combo) {
+                const dataLayer = (window as any).dataLayer || [];
+                dataLayer.push({
+                    event: isRemoving ? "remove_from_cart" : "add_to_cart",
+                    ecommerce: {
+                        currency: "BDT",
+                        value: combo.price,
+                        items: [{
+                            item_name: combo.shortTitle,
+                            price: combo.price,
+                            quantity: 1
+                        }]
+                    }
+                });
+            }
+
+            return isRemoving ? prev.filter((cId) => cId !== id) : [...prev, id];
+        });
+    };
+
+    const subtotal = combos
+        .filter((c) => selectedComboIds.includes(c.id))
+        .reduce((sum, c) => sum + c.price, 0);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
+
+        if (selectedComboIds.length === 0) {
+            alert("দয়া করে কমপক্ষে একটি প্যাকেজ সিলেক্ট করুন।");
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (typeof window !== "undefined") {
+            const dataLayer = (window as any).dataLayer || [];
+            const selectedItems = combos.filter(c => selectedComboIds.includes(c.id)).map(c => ({
+                item_name: c.shortTitle,
+                price: c.price,
+                quantity: 1
+            }));
+
+            dataLayer.push({
+                event: "begin_checkout",
+                ecommerce: {
+                    currency: "BDT",
+                    value: subtotal,
+                    items: selectedItems
+                }
+            });
+        }
 
         const formData = new FormData(e.currentTarget);
         const orderData = {
             name: formData.get('name'),
             phone: formData.get('phone'),
             address: formData.get('address'),
-            combo: selectedComboId, // Send selected state instead of form input
+            combos: selectedComboIds, // Send selected array
+            totalPrice: subtotal,
         };
 
         try {
@@ -56,10 +133,20 @@ export default function CheckoutForm() {
                 body: JSON.stringify(orderData),
             });
 
-            if (response.ok) {
-                setSuccess(true);
+            const result = await response.json();
+
+            if (response.ok && result.order_id) {
+                // Pass order_id, total, and items to success page for Realtime purchase tracking
+                const itemsParam = encodeURIComponent(JSON.stringify(
+                    combos.filter(c => selectedComboIds.includes(c.id)).map(c => ({
+                        item_name: c.shortTitle,
+                        price: c.price,
+                        quantity: 1
+                    }))
+                ));
+                router.push(`/success?order_id=${result.order_id}&total=${subtotal}&items=${itemsParam}`);
             } else {
-                alert("দুঃখিত, কোনো একটি সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।");
+                alert("দুঃখিত, কোনো একটি সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।");
             }
         } catch (error) {
             console.error(error);
@@ -68,31 +155,6 @@ export default function CheckoutForm() {
             setIsSubmitting(false);
         }
     };
-
-    if (success) {
-        return (
-            <section id="checkout" className="py-24 bg-background">
-                <div className="w-full px-4 md:px-8 lg:px-16 mx-auto max-w-2xl text-center">
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="p-12 border rounded-3xl bg-green-50/50 border-green-500/20"
-                    >
-                        <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-4xl text-green-600">🎉</span>
-                        </div>
-                        <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                            আপনার অর্ডারটি সফল হয়েছে!
-                        </h2>
-                        <p className="text-gray-600 text-lg">
-                            আমাদের একজন প্রতিনিধি খুব শীঘ্রই আপনাকে কল করে অর্ডার কনফার্ম করবেন।
-                            <br />ধন্যবাদ পোশাক প্রাঙ্গণের সাথে থাকার জন্য।
-                        </p>
-                    </motion.div>
-                </div>
-            </section>
-        );
-    }
 
     return (
         <section id="checkout" className="py-24 bg-surface relative">
@@ -183,11 +245,11 @@ export default function CheckoutForm() {
                         </h3>
                         <div className="flex flex-col gap-4">
                             {combos.map((combo) => {
-                                const isSelected = selectedComboId === combo.id;
+                                const isSelected = selectedComboIds.includes(combo.id);
                                 return (
                                     <div
                                         key={combo.id}
-                                        onClick={() => setSelectedComboId(combo.id)}
+                                        onClick={() => toggleCombo(combo.id)}
                                         className={`relative flex items-center p-3 sm:p-4 rounded-2xl cursor-pointer transition-all border-2 ${isSelected
                                             ? "bg-white border-[#baf598] shadow-md shadow-[#baf598]/20"
                                             : "bg-white/50 border-transparent hover:border-[#baf598]/40 hover:bg-white"
@@ -211,7 +273,7 @@ export default function CheckoutForm() {
                                                 {combo.shortTitle}
                                             </h4>
                                             <p className={`font-black tracking-tight ${isSelected ? "text-[#14532d]" : "text-slate-500"} ${isSelected ? "text-lg sm:text-xl" : "text-base sm:text-lg"}`}>
-                                                ৳ {combo.price}
+                                                ৳ {englishToBengali(combo.price)}
                                             </p>
                                         </div>
                                         <div className="ml-2 shrink-0">
@@ -226,8 +288,12 @@ export default function CheckoutForm() {
                             })}
                         </div>
 
-                        <div className="mt-8 pt-6 border-t border-[#baf598]/30 text-center">
-                            <p className="text-slate-600 font-medium text-sm">
+                        <div className="mt-6 pt-5 border-t border-[#baf598]/30">
+                            <div className="flex justify-between items-center mb-6 px-1 sm:px-2">
+                                <span className="text-lg md:text-xl font-bold text-slate-700">সর্বমোট (Subtotal):</span>
+                                <span className="text-2xl md:text-3xl font-black text-[#14532d]">৳ {englishToBengali(subtotal)}</span>
+                            </div>
+                            <p className="text-slate-600 font-medium text-sm text-center">
                                 বামপাশের ফর্ম পূরণ করে অর্ডার কনফার্ম করুন
                             </p>
                         </div>
