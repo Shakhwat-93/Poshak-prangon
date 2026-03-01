@@ -148,22 +148,7 @@ function SuccessContent() {
                         </div>
                     )}
 
-                    {/* Order Status Indicator */}
-                    {orderId && (
-                        <div className="mb-10">
-                            {isApproved ? (
-                                <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold border border-emerald-200/60">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    অর্ডার কনফার্মড ✓
-                                </div>
-                            ) : (
-                                <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2 rounded-full text-sm font-bold border border-amber-200/60">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    অর্ডার পেন্ডিং — কনফার্মেশনের জন্য অপেক্ষা করুন
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* Order status tracking logic remains in background, but UI is hidden as per user request */}
 
                     <div>
                         <Link

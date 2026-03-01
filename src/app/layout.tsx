@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bn" className="scroll-smooth">
-      <head>
+      <body className={`${hindSiliguri.variable} font-sans antialiased min-h-screen flex flex-col`}>
         <Script id="google-tag-manager" strategy="afterInteractive">
           {`
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -32,8 +32,6 @@ export default function RootLayout({
             })(window,document,'script','dataLayer','GTM-5WGGNCCL');
           `}
         </Script>
-      </head>
-      <body className={`${hindSiliguri.variable} font-sans antialiased min-h-screen flex flex-col`}>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

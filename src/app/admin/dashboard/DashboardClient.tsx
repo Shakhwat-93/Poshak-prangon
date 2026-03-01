@@ -35,12 +35,16 @@ export default function DashboardClient({ initialOrders, error }: { initialOrder
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
 
         try {
-            const { error: updateError } = await supabase
-                .from('orders')
-                .update({ status: newStatus })
-                .eq('id', orderId);
+            const response = await fetch('/api/admin/update-status', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId, status: newStatus }),
+            });
 
-            if (updateError) throw updateError;
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Failed to update status');
+            }
         } catch (e) {
             // Revert changes on error
             setOrders(initialOrders.map(o => ({ ...o, status: o.status || 'pending' })));
