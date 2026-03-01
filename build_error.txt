@@ -1,0 +1,35 @@
+▲ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+Error: Cannot apply unknown utility class `from-primary-400`
+    [2m[at onInvalidCandidate (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:21:1511)][0m
+    [2m[at Ee (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:16:37066)][0m
+    [2m[at C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:21:355][0m
+    [2m[at Pr (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:3:1733)][0m
+    [2m[at _ (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:3:1377)][0m
+    [2m[at Te (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:21:172)][0m
+    [2m[at pn (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:38:294)][0m
+    [2m[at async dn (C:\projects\poshak-prangon\node_modules\tailwindcss\dist\lib.js:38:631)][0m
+    [2m[at async Xr (C:\projects\poshak-prangon\node_modules\@tailwindcss\node\dist\index.js:10:3417)][0m
+    [2m[at async N (C:\projects\poshak-prangon\node_modules\@tailwindcss\postcss\dist\index.js:10:3979)][0m
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: C:\projects\poshak-prangon\src\app\globals.css:1:1: Cannot apply unknown utility class `from-primary-400`
+    at Input.error (node_modules/postcss/lib/input.js:135:16) [C:\projects\poshak-prangon\.next\build\chunks\node_modules_fe693df6._.js:4651:22]
+    at Root.error (node_modules/postcss/lib/node.js:146:32) [C:\projects\poshak-prangon\.next\build\chunks\node_modules_fe693df6._.js:928:38]
+    [at Object.Once (C:\projects\poshak-prangon\node_modules\@tailwindcss\postcss\dist\index.js:10:6913)]
+    at async LazyResult.runAsync (node_modules/postcss/lib/lazy-result.js:293:11) [C:\projects\poshak-prangon\.next\build\chunks\node_modules_fe693df6._.js:6206:21]
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\projects\poshak-prangon\.next\build\chunks\[root-of-the-server]__51225daf._.js:146:36]
+    at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23) [C:\projects\poshak-prangon\.next\build\chunks\[root-of-the-server]__974941ed._.js:443:31]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\projects\poshak-prangon\.next\build\chunks\[root-of-the-server]__51225daf._.js:146:36])
+    at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23) [C:\projects\poshak-prangon\.next\build\chunks\[root-of-the-server]__974941ed._.js:443:31])
