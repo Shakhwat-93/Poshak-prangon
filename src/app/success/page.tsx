@@ -98,13 +98,13 @@ function SuccessContent() {
         // Push full purchase event with customer details
         dataLayer.push({
             event: "purchase",
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            customer_address: customerAddress,
             ecommerce: {
                 transaction_id: orderId,
                 value: parseInt(total),
                 currency: "BDT",
-                customer_name: customerName,
-                customer_phone: customerPhone,
-                customer_address: customerAddress,
                 items: items,
             }
         });
