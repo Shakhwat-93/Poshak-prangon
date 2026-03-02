@@ -298,7 +298,8 @@ export default function CheckoutForm() {
                                 <span className="text-2xl md:text-3xl font-black text-[#14532d]">৳ {englishToBengali(subtotal)}</span>
                             </div>
                             <p className="text-slate-600 font-medium text-sm text-center">
-                                নিচের ফর্মটি পূরণ করে অর্ডার কনফার্ম করুন
+                                <span className="hidden lg:inline">বামপাশের ফর্মটি পূরণ করে অর্ডার কনফার্ম করুন</span>
+                                <span className="lg:hidden">নিচের ফর্মটি পূরণ করে অর্ডার কনফার্ম করুন</span>
                             </p>
                         </div>
                     </motion.div>
