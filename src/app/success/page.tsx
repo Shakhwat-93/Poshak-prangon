@@ -95,32 +95,23 @@ function SuccessContent() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dataLayer = (window as any).dataLayer || [];
 
-        // 1. Standard GA4 Purchase Event
+        // Push full purchase event with customer details
         dataLayer.push({
             event: "purchase",
             ecommerce: {
                 transaction_id: orderId,
                 value: parseInt(total),
                 currency: "BDT",
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                customer_address: customerAddress,
                 items: items,
-            }
-        });
-
-        // 2. Custom Customer Data Event (Separate as requested)
-        dataLayer.push({
-            event: "customer_info",
-            customer_detail: {
-                name: customerName,
-                phone: customerPhone,
-                address: customerAddress,
-                order_id: orderId,
-                total_value: parseInt(total)
             }
         });
 
         sessionStorage.setItem(`purchase_fired_${orderId}`, "true");
         setPurchaseFired(true);
-        console.log(`✅ Success: Standard Purchase & Customer Info fired for: ${orderId}`);
+        console.log(`✅ Success: Purchase event with customer details fired for: ${orderId}`);
     };
 
     const englishToBengali = (num: number | string) => {
