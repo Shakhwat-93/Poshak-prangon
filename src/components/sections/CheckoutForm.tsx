@@ -136,7 +136,6 @@ export default function CheckoutForm() {
             const result = await response.json();
 
             if (response.ok && result.order_id) {
-                // Pass order_id, total, and items to success page for Realtime purchase tracking
                 const itemsParam = encodeURIComponent(JSON.stringify(
                     combos.filter(c => selectedComboIds.includes(c.id)).map(c => ({
                         item_name: c.shortTitle,
@@ -144,7 +143,12 @@ export default function CheckoutForm() {
                         quantity: 1
                     }))
                 ));
-                router.push(`/success?order_id=${result.order_id}&total=${subtotal}&items=${itemsParam}`);
+
+                const customerName = encodeURIComponent(formData.get('name') as string);
+                const customerPhone = encodeURIComponent(formData.get('phone') as string);
+                const customerAddress = encodeURIComponent(formData.get('address') as string);
+
+                router.push(`/success?order_id=${result.order_id}&total=${subtotal}&items=${itemsParam}&customer_name=${customerName}&customer_phone=${customerPhone}&customer_address=${customerAddress}`);
             } else {
                 alert("দুঃখিত, কোনো একটি সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।");
             }

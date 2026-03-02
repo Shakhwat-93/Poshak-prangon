@@ -13,10 +13,9 @@ function SuccessContent() {
     const orderId = searchParams.get("order_id") || "";
     const itemsParam = searchParams.get("items");
 
-    // Parse items from URL for accurate purchase event data
-    const items = itemsParam ? JSON.parse(decodeURIComponent(itemsParam)) : [
-        { item_name: "Poshak Prangon Combos", price: parseInt(total), quantity: 1 }
-    ];
+    const customerName = searchParams.get("customer_name") || "";
+    const customerPhone = searchParams.get("customer_phone") || "";
+    const customerAddress = searchParams.get("customer_address") || "";
 
     // Track whether the order has been approved (status changed to processing)
     const [isApproved, setIsApproved] = useState(false);
@@ -96,6 +95,9 @@ function SuccessContent() {
                 transaction_id: orderId,
                 value: parseInt(total),
                 currency: "BDT",
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                customer_address: customerAddress,
                 items: items,
             }
         });
