@@ -5,13 +5,18 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const englishToBengali = (num: number | string) => {
-    const items: { [key: string]: string } = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯' };
+    const items: { [key: string]: string } = {
+        '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪',
+        '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'
+    };
     return num.toString().replace(/[0-9]/g, (match) => items[match]);
 };
 
-// Add the same combos data for the checkout visual representation
+// ─── Combo data ───────────────────────────────────────────────────────────────
 const combos = [
     {
         id: "combo-1",
@@ -37,13 +42,14 @@ const combos = [
     },
 ];
 
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function CheckoutForm() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     // Pre-select the recommended combo (combo-2) by default
     const [selectedComboIds, setSelectedComboIds] = useState<string[]>(["combo-2"]);
 
-    // Track initial checkout open
+    // Track initial checkout open for GA
     useEffect(() => {
         if (typeof window !== "undefined") {
             const dataLayer = (window as any).dataLayer || [];
@@ -72,11 +78,7 @@ export default function CheckoutForm() {
                     ecommerce: {
                         currency: "BDT",
                         value: combo.price,
-                        items: [{
-                            item_name: combo.shortTitle,
-                            price: combo.price,
-                            quantity: 1
-                        }]
+                        items: [{ item_name: combo.shortTitle, price: combo.price, quantity: 1 }]
                     }
                 });
             }
@@ -94,67 +96,69 @@ export default function CheckoutForm() {
         setIsSubmitting(true);
 
         if (selectedComboIds.length === 0) {
-            alert("দয়া করে কমপক্ষে একটি প্যাকেজ সিলেক্ট করুন।");
+            alert("দয়া করে কমপক্ষে একটি প্যাকেজ সিলেক্ট করুন।");
             setIsSubmitting(false);
             return;
         }
 
+        const formData = new FormData(e.currentTarget);
+        const name = formData.get('name') as string;
+        const phone = formData.get('phone') as string;
+        const address = formData.get('address') as string;
+
+        // ── GA: begin_checkout event ──────────────────────────────────────────
         if (typeof window !== "undefined") {
             const dataLayer = (window as any).dataLayer || [];
-            const selectedItems = combos.filter(c => selectedComboIds.includes(c.id)).map(c => ({
-                item_name: c.shortTitle,
-                price: c.price,
-                quantity: 1
-            }));
+            const selectedItems = combos
+                .filter(c => selectedComboIds.includes(c.id))
+                .map(c => ({ item_name: c.shortTitle, price: c.price, quantity: 1 }));
 
             dataLayer.push({
                 event: "begin_checkout",
-                ecommerce: {
-                    currency: "BDT",
-                    value: subtotal,
-                    items: selectedItems
-                }
+                ecommerce: { currency: "BDT", value: subtotal, items: selectedItems }
             });
         }
 
-        const formData = new FormData(e.currentTarget);
-        const orderData = {
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            address: formData.get('address'),
-            combos: selectedComboIds, // Send selected array
-            totalPrice: subtotal,
-        };
-
         try {
-            const response = await fetch('/api/order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData),
-            });
+            // ── Direct Supabase insert (no API route needed in static export) ──
+            const { data: insertedOrder, error } = await supabase
+                .from('orders')
+                .insert({
+                    name,
+                    phone,
+                    address,
+                    combos: selectedComboIds,
+                    total_price: subtotal,
+                })
+                .select('id')
+                .single();
 
-            const result = await response.json();
-
-            if (response.ok && result.order_id) {
-                const itemsParam = encodeURIComponent(JSON.stringify(
-                    combos.filter(c => selectedComboIds.includes(c.id)).map(c => ({
-                        item_name: c.shortTitle,
-                        price: c.price,
-                        quantity: 1
-                    }))
-                ));
-
-                const customerName = encodeURIComponent(formData.get('name') as string);
-                const customerPhone = encodeURIComponent(formData.get('phone') as string);
-                const customerAddress = encodeURIComponent(formData.get('address') as string);
-
-                router.push(`/success?order_id=${result.order_id}&total=${subtotal}&items=${itemsParam}&customer_name=${customerName}&customer_phone=${customerPhone}&customer_address=${customerAddress}`);
-            } else {
+            if (error || !insertedOrder) {
+                console.error("Supabase Insert Error:", error);
                 alert("দুঃখিত, কোনো একটি সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।");
+                return;
             }
+
+            const orderId = insertedOrder.id;
+
+            // ── Build redirect params ─────────────────────────────────────────
+            const itemsParam = encodeURIComponent(JSON.stringify(
+                combos.filter(c => selectedComboIds.includes(c.id)).map(c => ({
+                    item_name: c.shortTitle,
+                    price: c.price,
+                    quantity: 1
+                }))
+            ));
+
+            router.push(
+                `/success?order_id=${orderId}&total=${subtotal}&items=${itemsParam}` +
+                `&customer_name=${encodeURIComponent(name)}` +
+                `&customer_phone=${encodeURIComponent(phone)}` +
+                `&customer_address=${encodeURIComponent(address)}`
+            );
         } catch (error) {
             console.error(error);
-            alert("নেটওয়ার্কে সমস্যা। দয়া করে আবার চেষ্টা করুন।");
+            alert("নেটওয়ার্কে সমস্যা। দয়া করে আবার চেষ্টা করুন।");
         } finally {
             setIsSubmitting(false);
         }
@@ -168,7 +172,7 @@ export default function CheckoutForm() {
                         অর্ডার করতে নিচের <span className="text-[#16a34a] drop-shadow-sm">ফর্মটি</span> পূরণ করুন
                     </h2>
                     <p className="text-base md:text-lg text-slate-600 font-medium px-4">
-                        কোনো অগ্রিম পেমেন্ট লাগবে না। প্রোডাক্ট হাতে পেয়ে টাকা পরিশোধ করবেন।
+                        কোনো অগ্রিম পেমেন্ট লাগবে না। প্রোডাক্ট হাতে পেয়ে টাকা পরিশোধ করবেন।
                     </p>
                 </div>
 
@@ -237,7 +241,7 @@ export default function CheckoutForm() {
                         </form>
                     </motion.div>
 
-                    {/* Right Side: Combo Selection Guide */}
+                    {/* Right Side: Combo Selection */}
                     <motion.div
                         initial={{ opacity: 0, x: 30 }}
                         whileInView={{ opacity: 1, x: 0 }}

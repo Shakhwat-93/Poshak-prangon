@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# ── Serve next_assets/ files directly — explicit pattern match (no -f check) ──
+# This bypasses the file-existence check that fails on some Hostinger configs.
+RewriteRule ^next_assets/ - [L,NC]
+
+# ── Serve common static files by extension ────────────────────────────────────
+RewriteRule \.(jpg|jpeg|png|gif|webp|svg|ico|woff|woff2|ttf|eot|otf)$ - [L,NC]
+
+# ── Route all other requests to index.html (Next.js SPA routing) ──────────────
+RewriteRule ^ /index.html [L]

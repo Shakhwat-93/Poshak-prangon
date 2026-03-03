@@ -31,24 +31,21 @@ export default function DashboardClient({ initialOrders, error }: { initialOrder
     };
 
     const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
-        // Optimistic update
+        // Optimistic update — immediately reflect the change in the UI
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
 
         try {
-            const response = await fetch('/api/admin/update-status', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId, status: newStatus }),
-            });
+            // Direct Supabase update — no API route needed in static export
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', orderId);
 
-            const result = await response.json();
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Failed to update status');
-            }
+            if (error) throw new Error(error.message);
         } catch (e) {
-            // Revert changes on error
+            // Revert on failure
             setOrders(initialOrders.map(o => ({ ...o, status: o.status || 'pending' })));
-            console.error("Failed to update status in database:", e);
+            console.error("Failed to update order status:", e);
         }
     };
 

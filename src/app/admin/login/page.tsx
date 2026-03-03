@@ -5,33 +5,28 @@ import { useRouter } from "next/navigation";
 import { Lock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+// ─── Hardcoded password for client-side auth (no server needed for static hosting) ───
+// Change this value if you want to update the admin password.
+const ADMIN_PASSWORD = "poshak@admin2026";
+
 export default function AdminLogin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
 
-        try {
-            const res = await fetch("/api/admin/auth", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password }),
-            });
-
-            if (res.ok) {
-                router.push("/admin/dashboard");
-            } else {
-                setError("ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।");
-                setPassword("");
-            }
-        } catch (err) {
-            setError("নেটওয়ার্কে সমস্যা!");
-        } finally {
+        // Simple client-side password check — saves session to localStorage
+        if (password === ADMIN_PASSWORD) {
+            localStorage.setItem("admin_auth", "true");
+            router.push("/admin/dashboard");
+        } else {
+            setError("ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।");
+            setPassword("");
             setIsLoading(false);
         }
     };
@@ -62,7 +57,11 @@ export default function AdminLogin() {
                             required
                         />
                         {error && (
-                            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 text-sm font-medium mt-2 text-center absolute -bottom-6 left-0 right-0">
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-red-500 text-sm font-medium mt-2 text-center absolute -bottom-6 left-0 right-0"
+                            >
                                 {error}
                             </motion.p>
                         )}
